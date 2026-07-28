@@ -1,0 +1,532 @@
+aid: heathrow-airport
+name: Heathrow Airport
+review:
+  question: Does Heathrow Airport publish a public developer portal, documented APIs,
+    and a machine-readable API contract - and what would it cost a consumer to leave?
+  answer: partial
+  date: '2026-07-28'
+  reviewer: API Evangelist
+  method: direct HTTP probing of heathrow.com, developer.heathrow.com, api.heathrow.com,
+    the Azure API Management portal sitemap and its management endpoint, the website's
+    own backend hosts, robots.txt, sitemaps, terms and privacy notices
+findings:
+  summary: |
+    Heathrow Airport Limited operates a real, branded, publicly reachable developer
+    portal at https://developer.heathrow.com - a Microsoft Azure API Management
+    developer portal (page titles still carry the stock "Microsoft Azure API Management
+    - developer portal" suffix) fronted by an Azure Front Door. It returned HTTP 200 on
+    2026-07-28. This puts Heathrow ahead of most airport operators, which publish
+    nothing at all.
+
+    The portal publicly documents three API products in prose, each on its own page:
+    Flights (/api-flights), Flight Connections (/api-connections) and Weather
+    (/api-weather). Those pages name the data each API returns - destinations,
+    arrivals, airlines, aircraft types, flight status, gates and terminals for Flights;
+    flight-to-flight, flight-to-terminal, terminal-to-terminal and terminal-to-flight
+    queries for Connections; temperature, weather categories, countries list and
+    weather-by-IATA-code for Weather. That is the entire public technical surface.
+
+    Nothing machine-readable is published. /apis and /products both return HTTP 200 but
+    render an empty list. The portal's own configuration document at
+    https://developer.heathrow.com/config.json (HTTP 200) discloses the backing
+    management endpoint -
+    https://apimgmt.lhr.aero/subscriptions/000/resourceGroups/000/providers/Microsoft.ApiManagement/service/apim-halcomcommon-prod-westeu-001,
+    api-version 2022-04-01-preview. Queried anonymously, that endpoint returns
+    {"value":[],"count":0} for /apis, /products, /apiVersionSets and /tags, and HTTP
+    401 for /identityProviders, /groups, /namedValues and every /portalsettings path.
+    The API catalogue is therefore visible only after authentication. No OpenAPI,
+    Swagger, AsyncAPI, GraphQL, Postman collection or JSON Schema is retrievable
+    anonymously anywhere on either heathrow.com or developer.heathrow.com.
+
+    Access is explicitly gated by human approval. The portal's own How It Works page
+    states it plainly: "In order to get the access to our APIs you need to get a
+    personal account or an account for you team, for security and privacy reasons
+    before we grant you access to the APIs, we need to know what type of user you are
+    and why you want to use the APIs." It directs applicants to support@heathrow.com
+    or 08443351801, then to an "enrolling process", after which "you'll be able to
+    access using the Microsoft active directory". The sign-in page confirms: "Sign in
+    using your Azure Active Directory credentials." A /signup page exists but offers no
+    self-serve registration form to an anonymous visitor.
+
+    The runtime gate is stronger still. https://api.heathrow.com/ and every path probed
+    beneath it return HTTP 400 from Microsoft-Azure-Application-Gateway/v2 with the
+    body "400 No required SSL certificate was sent" - the gateway enforces mutual TLS
+    and demands a Heathrow-issued client certificate. The portal sitemap corroborates
+    this with an entry for /documentation/requesting-a-client-certificate, though that
+    page itself now returns HTTP 404 - documented process, broken document.
+
+    Separately, the public heathrow.com website is backed by an entirely undocumented
+    API estate on api-dp-prod.dp.heathrow.com, discovered in the page source of
+    https://www.heathrow.com/arrivals. It includes /pihub/flights/arrivals,
+    /pihub/flights/departures, /pihub/flights/timetable, /pihub/flightconnections/,
+    /pihub/weather/forecasts/, /pihub/securitywaittime, /pihub/immigrationwaittime,
+    /pihub/poi, /journey/api/v1/travel/ride, /enterprisesearch/prod/odata/flights and
+    third-party passthroughs to National Rail and TransportAPI. Every one of these
+    returned HTTP 403 {"message":"Forbidden"} to an unauthenticated probe - they require
+    a key that is never exposed to the browser. Notably the /pihub/ path names mirror
+    the three portal products exactly, which suggests the portal APIs and the website
+    backend are the same platform behind different gates. These are deliberately NOT
+    listed in apis.yml: they are undocumented, unversioned website backends with no
+    published contract.
+
+    Heathrow is not part of the travel distribution chain in the intermediation sense.
+    It sells no seats, holds no bookable inventory, files no fares, issues no PNRs or
+    e-tickets, holds no IATA/ARC accreditation relationship with agencies, and has no
+    GDS or IATA NDC posture whatsoever. Slot allocation at LHR sits with Airport
+    Coordination Limited, not with Heathrow and not with a distribution system.
+    Distribution model is not-applicable; NDC posture is not applicable.
+
+    Two governance failures are worth recording because they bear directly on how much
+    a consumer can rely on the published contract. The developer portal's Terms and
+    Conditions page (https://developer.heathrow.com/terms-and-conditions, HTTP 200) is
+    verbatim boilerplate for a different website - it opens "These terms and conditions
+    ('Terms') govern your viewing and use of this website http://careers.heathrow.com/"
+    - so there are no API terms of service at all. And the portal's Privacy page
+    (https://developer.heathrow.com/privacy, HTTP 200) is unedited Lorem ipsum
+    placeholder text. The API changelog page renders empty.
+  probes:
+    - url: https://www.heathrow.com/
+      status: 200
+    - url: https://heathrow.com/
+      status: 200
+    - url: https://developer.heathrow.com/
+      status: 200
+      note: Azure API Management developer portal, Heathrow-branded (logo at
+        /content/heathrow-col-logo.png, HTTP 200). Nav is APIs / Products / sign-in.
+        Footer - Heathrow Airport Limited, The Compass Centre, Nelson Road, Hounslow,
+        Middlesex TW6 2GW. Copyright LHR Airports Limited.
+    - url: https://developer.heathrow.com/config.json
+      status: 200
+      note: 'Discloses managementApiUrl https://apimgmt.lhr.aero/subscriptions/000/resourceGroups/000/providers/Microsoft.ApiManagement/service/apim-halcomcommon-prod-westeu-001,
+        managementApiVersion 2022-04-01-preview, supportAdminPath true, featureFlags
+        powCaptcha.Enabled true.'
+    - url: https://developer.heathrow.com/sitemap.xml
+      status: 200
+      note: 23 URLs. Content pages of interest - /api-flights, /api-weather,
+        /api-connections, /api-changelog, /api-details, /how-it-works, /products,
+        /apis, /terms-and-conditions, /privacy, /reports,
+        /documentation/requesting-a-client-certificate, /signup-oauth.
+    - url: https://developer.heathrow.com/api-flights
+      status: 200
+      note: Public prose description of the Flights API. No endpoints, no schema, no
+        base URL, no rate limits, no pricing.
+    - url: https://developer.heathrow.com/api-connections
+      status: 200
+      note: Public prose description of the Connections API and its four query shapes.
+    - url: https://developer.heathrow.com/api-weather
+      status: 200
+      note: Public prose description of the Weather API.
+    - url: https://developer.heathrow.com/how-it-works
+      status: 200
+      note: The access gate, stated by Heathrow. Contact support@heathrow.com /
+        08443351801, describe user type and purpose, complete an enrolment process,
+        then sign in with Microsoft Active Directory.
+    - url: https://developer.heathrow.com/apis
+      status: 200
+      note: Renders an empty API list to anonymous visitors.
+    - url: https://developer.heathrow.com/products
+      status: 200
+      note: Renders an empty product list to anonymous visitors.
+    - url: https://developer.heathrow.com/signin
+      status: 200
+      note: '"Sign in using your Azure Active Directory credentials." No local account
+        option offered.'
+    - url: https://developer.heathrow.com/signup
+      status: 200
+      note: Page exists but presents no self-serve registration form anonymously.
+    - url: https://developer.heathrow.com/api-changelog
+      status: 200
+      note: Page renders with the heading "API changelog" and no entries.
+    - url: https://developer.heathrow.com/terms-and-conditions
+      status: 200
+      note: BOILERPLATE MISMATCH - the text governs http://careers.heathrow.com/, not
+        the API programme. No API terms of service exist.
+    - url: https://developer.heathrow.com/privacy
+      status: 200
+      note: PLACEHOLDER - unedited Lorem ipsum.
+    - url: https://developer.heathrow.com/documentation/requesting-a-client-certificate
+      status: 404
+      note: Listed in the portal's own sitemap but does not resolve. Variants
+        /requesting-a-client-certificate and
+        /documentation-requesting-a-client-certificate also 404.
+    - url: https://developer.heathrow.com/robots.txt
+      status: 404
+    - url: https://developer.heathrow.com/llms.txt
+      status: 404
+    - url: https://developer.heathrow.com/.well-known/security.txt
+      status: 404
+    - url: https://apimgmt.lhr.aero/subscriptions/000/resourceGroups/000/providers/Microsoft.ApiManagement/service/apim-halcomcommon-prod-westeu-001/apis?api-version=2022-04-01-preview
+      status: 200
+      note: '{"value":[],"count":0} anonymously. Same for /products, /apiVersionSets
+        and /tags.'
+    - url: https://apimgmt.lhr.aero/subscriptions/000/resourceGroups/000/providers/Microsoft.ApiManagement/service/apim-halcomcommon-prod-westeu-001/identityProviders?api-version=2022-04-01-preview
+      status: 401
+      note: Same 401 for /groups, /namedValues, /portalsettings/signin,
+        /portalsettings/signup and /portalsettings/delegation.
+    - url: https://api.heathrow.com/
+      status: 400
+      note: 'Server "Microsoft-Azure-Application-Gateway/v2". Body - "400 No required
+        SSL certificate was sent". Mutual TLS enforced. /apis, /flights and /status
+        return the same.'
+    - url: https://apimgmt.lhr.aero/
+      status: 400
+      note: Same Azure Application Gateway mutual-TLS rejection at the root.
+    - url: https://api-dp-prod.dp.heathrow.com/pihub/flights/arrivals
+      status: 403
+      note: '{"message":"Forbidden"}. Undocumented website backend referenced from
+        https://www.heathrow.com/arrivals page source. Same 403 for
+        /pihub/flights/departures, /pihub/flights/timetable, /pihub/flightconnections/,
+        /pihub/weather/forecasts/, /pihub/securitywaittime, /pihub/immigrationwaittime,
+        /pihub/poi, /openapi.json, /swagger.json and the host root.'
+    - url: https://developers.heathrow.com/
+      status: 0
+      note: Does not resolve.
+    - url: https://docs.heathrow.com/
+      status: 0
+      note: Does not resolve.
+    - url: https://data.heathrow.com/
+      status: 0
+      note: Does not resolve. Heathrow publishes no open-data portal.
+    - url: https://cargo.heathrow.com/
+      status: 0
+      note: Does not resolve.
+    - url: https://www.heathrow.com/developers
+      status: 404
+    - url: https://www.heathrow.com/api
+      status: 404
+    - url: https://www.heathrow.com/docs
+      status: 404
+    - url: https://www.heathrow.com/openapi.json
+      status: 404
+    - url: https://www.heathrow.com/swagger.json
+      status: 404
+    - url: https://www.heathrow.com/api-docs
+      status: 404
+    - url: https://www.heathrow.com/.well-known/security.txt
+      status: 404
+      note: No security.txt and no published vulnerability disclosure policy found.
+    - url: https://www.heathrow.com/llms.txt
+      status: 404
+    - url: https://www.heathrow.com/robots.txt
+      status: 200
+      note: 'Allow /. Disallow /*?flightIds=*, /*?flightDate=*, /search/search-result,
+        /expansion/search/search-result, /rewards, /myheathrow. Sitemap
+        https://www.heathrow.com/sitemap-index.xml. The flightIds disallow is direct
+        evidence of an opaque internal flight identifier in the URL surface.'
+    - url: https://www.heathrow.com/sitemap.xml
+      status: 200
+      note: 6,145 URLs. No developer, API, open-data or data-portal page anywhere in
+        the index. The only "data" pages are community noise pages.
+    - url: https://www.heathrow.com/terms-and-conditions
+      status: 200
+      note: The real website terms. Clauses 5.2, 5.3, 5.4, 5.5.2 and 4.2.6 quoted
+        verbatim under switchingCost.contractualLockIn.
+    - url: https://www.heathrow.com/privacy-notice
+      status: 200
+      note: UK GDPR rights section names data portability; exercised via the Heathrow
+        Data Protection Officer at privacy@heathrow.com.
+    - url: https://www.heathrow.com/arrivals
+      status: 200
+      note: Source disclosed the api-dp-prod.dp.heathrow.com backend host and its
+        route inventory. No subscription key or auth header is present in the markup.
+    - url: https://webtrak.emsbk.com/lhr
+      status: 200
+      note: Heathrow's flight-track and noise transparency tool, operated by a third
+        party (EMS Brüel & Kjær WebTrak). Vendor surface, not a Heathrow API.
+    - url: https://api.github.com/orgs/heathrow
+      status: 404
+      note: No Heathrow GitHub organisation. github.com/Heathrow (user id 708558) is an
+        unrelated personal account, not the airport.
+switchingCost:
+  interfaceShape:
+    value: proprietary-documented
+    standardsNamed:
+      - name: IATA and ICAO location and airline coding
+        where: Airport identity (IATA LHR / ICAO EGLL) and the Weather API's documented
+          "weather by iatacode" lookup
+        status: used as data values, not as a published interface contract
+      - name: OData
+        where: https://api-dp-prod.dp.heathrow.com/enterprisesearch/prod/odata/flights
+          and /odata/web, referenced from the heathrow.com page source
+        status: an open query protocol is in use on the undocumented website backend,
+          but the resource model behind it is unpublished and the host returns 403
+      - name: Microsoft Entra ID / Azure Active Directory
+        where: developer.heathrow.com sign-in
+        status: implemented; governs authentication only, and does not make the data
+          interface portable
+      - name: Mutual TLS (client certificate authentication)
+        where: api.heathrow.com and apimgmt.lhr.aero Azure Application Gateway
+        status: enforced; "400 No required SSL certificate was sent"
+    standardsAbsent:
+      - IATA NDC - no relevance, Heathrow distributes no inventory
+      - OpenTravel / OTA - no reference found
+      - HTNG - not applicable
+      - ACRIS Semantic Model (ACI's airport data standard) - no reference found
+        anywhere on heathrow.com or developer.heathrow.com
+      - A-CDM public data-sharing interface - none published
+      - OpenAPI, AsyncAPI, GraphQL, JSON Schema - none published or retrievable
+        anonymously
+    evidence: Heathrow publishes prose product descriptions but no machine-readable
+      contract, no endpoint reference, no versioning policy and no changelog entries.
+      The response shapes for Flights, Connections and Weather are bespoke to Heathrow
+      and are not described against any industry schema. A consumer integrates against
+      a shape they can only see after enrolment, and cannot diff, mock or code-generate
+      before signing up.
+  secondSource:
+    value: alternatives-with-migration
+    alternativesConsidered:
+      - name: OAG
+        note: Commercial flight schedules, status and connections in RESTful JSON; LHR
+          fully covered. The nearest functional substitute for both the Flights and the
+          Connections products.
+      - name: Cirium (FlightStats)
+        note: Same class - schedules, status, connections, minimum connect times.
+      - name: FlightAware AeroAPI
+        note: Query-based flight tracking and status covering LHR movements.
+      - name: aviationstack / FlightLabs / Flightradar24
+        note: Commercial aggregators reselling LHR movement data.
+      - name: Met Office DataHub, OpenWeather, Open-Meteo, AccuWeather
+        note: The Weather product is the weakest lock-in of the three. Airport weather
+          by IATA code is a commodity available from many providers, several of them
+          free, and Heathrow is not the authoritative source for weather at other
+          airports.
+      - name: EUROCONTROL NM B2B / UK CAA published data
+        note: Regulatory and network sources for movement and slot data, but on
+          entirely different access terms.
+    reasoning: For flight schedule and status, real substitutes exist - but they are a
+      different commercial relationship, a different data model and a paid contract, so
+      moving is a project rather than a swap. For anything only the airport operator
+      holds, there is no second source at all - Heathrow-specific terminal and gate
+      assignment, intra-airport transfer and connection timing between LHR terminals,
+      security and immigration wait times, and points of interest inside the campus.
+      And for physical access to Heathrow's runways and stands there is no alternative
+      in the London hub market - Gatwick, Stansted and Luton are different airports
+      serving different networks, not a second source for LHR.
+  exitPath:
+    value: export-on-request
+    operationCited: null
+    detail: No export, dump, bulk or data-portability operation is documented, because
+      no endpoint reference is published at all. The portal exposes a /reports page in
+      its sitemap, but that is Azure API Management's standard consumer analytics view,
+      is only reachable authenticated, and reports usage - not data. The only
+      implemented portability commitment is the statutory one.
+    verbatim: >-
+      "Under the General Data Protection Regulation, you have the right to: Access your
+      personal data by making a subject access request; Rectification, erasure or
+      restriction of your information where this is justified; Object to the processing
+      of your information where this is justified; Data portability"
+    channel: Data Protection Officer, Heathrow Airport Limited, The Compass Centre,
+      Nelson Road, Hounslow, Middlesex TW6 2GW. Email privacy@heathrow.com. Complaints
+      escalate to the UK Information Commissioner.
+    note: This is an individual privacy right under the UK GDPR, not a data-portability
+      mechanism for an integrator. A developer who built on the Flights or Connections
+      API and wanted out would have nothing to export - they never held a store, only a
+      live feed - and would face the harder problem of re-modelling every response
+      shape against a replacement provider.
+  identifierPortability:
+    value: IATA and ICAO codes travel; the flight record key and the terminal model do
+      not
+    detail: Portable identifiers documented or observed - IATA airport code LHR and
+      ICAO code EGLL for the airport itself; IATA airline designators and aircraft
+      types, named on the Flights API page; IATA code lookup, named explicitly on the
+      Weather API page ("Weather by iatacode"). Non-portable identifiers - an opaque
+      internal flight identifier surfaced as the flightIds query parameter, which
+      heathrow.com's own robots.txt disallows crawling (the rule reads "Disallow"
+      then "/*?flightIds=*"),
+      and Heathrow's terminal model (T2/T3/T4/T5 plus the flight-to-terminal and
+      terminal-to-terminal connection query shapes), which is meaningful only at
+      Heathrow and has no cross-airport equivalent. There is no PNR or record locator,
+      no IATA/ARC agency number, no GDS record ID, no hotel chain code and no GIATA ID
+      anywhere in the surface, because Heathrow never touches a booking.
+  contractualLockIn:
+    value: no API terms of service published at all; the website terms prohibit
+      systematic downloading into a database
+    entity: Heathrow Airport Limited, The Compass Centre, Nelson Road, Hounslow,
+      Middlesex TW6 2GW. The developer portal footer credits LHR Airports Limited, a
+      private limited company registered in England under Company Number 1970855.
+    verbatim:
+      - source: https://www.heathrow.com/terms-and-conditions
+        clause: 5.5.2 - no systematic extraction into a database
+        text: >-
+          "You may not do any of the following without our written permission: ...
+          create a database in electronic or structured manual form by systematically
+          downloading and storing any content."
+      - source: https://www.heathrow.com/terms-and-conditions
+        clause: 5.2 - no reuse or derivative works
+        text: >-
+          "Except as stated in paragraph 7.4 below, without our prior written
+          permission, you may not copy, reproduce, modify, alter, publish, broadcast,
+          distribute, display, post, sell, transfer or transmit in any form or by any
+          means any material on this Website or Software whether in whole or in part
+          nor use the material or Software to create derivative works."
+      - source: https://www.heathrow.com/terms-and-conditions
+        clause: 5.3 - no caching or mirroring for third parties
+        text: >-
+          "The contents of the pages contained in this Website may not be distributed,
+          displayed or copied to third parties including, but not limited to, 'caching'
+          any material on this Website for access by third parties and 'mirroring' any
+          material on this Website."
+      - source: https://www.heathrow.com/terms-and-conditions
+        clause: 5.4 - personal non-commercial use only
+        text: >-
+          "The contents of individual pages of this Website may be printed or
+          downloaded to disk for the purpose of private and personal non-commercial
+          use."
+      - source: https://www.heathrow.com/terms-and-conditions
+        clause: 4.2.6 - load limitation
+        text: >-
+          "you agree that you will not: ... take any action that imposes an
+          unreasonable or disproportionately large load on this Website or related
+          infrastructure"
+      - source: https://www.heathrow.com/terms-and-conditions
+        clause: 4.2.8 - no credential sharing
+        text: >-
+          "grant access to the Website to any third party or to any other user who
+          already has access to the Website by providing or sharing usernames and/or
+          passwords provided for your use."
+      - source: https://www.heathrow.com/terms-and-conditions
+        clause: 4.3 - termination at will on breach
+        text: >-
+          "We reserve the right to suspend or terminate your access and use of this
+          Website at any time if you breach these Terms."
+      - source: https://www.heathrow.com/terms-and-conditions
+        clause: 11.1 - governing law
+        text: >-
+          "These Terms, its subject matter and its formation, are governed by English
+          law. You and we both agree that the courts of England and Wales will have
+          exclusive jurisdiction."
+      - source: https://developer.heathrow.com/terms-and-conditions
+        clause: the developer portal's own terms are boilerplate for another site
+        text: >-
+          "These terms and conditions ('Terms') govern your viewing and use of this
+          website http://careers.heathrow.com/ (the 'Website') which is owned and
+          operated by LHR Airports Limited."
+        note: Quoted to establish that no API-specific terms of service exist. The
+          adjacent /privacy page on the same portal is unedited Lorem ipsum.
+    notPublished:
+      - API terms of service or acceptable use policy
+      - minimum term or commitment
+      - exclusivity
+      - pricing, per-call or per-segment fees
+      - rate limits or quotas
+      - service level agreement or uptime commitment
+      - deprecation, versioning or breaking-change policy
+      - termination notice period
+      - data licence for API responses
+    reading: Heathrow publishes documentation but not a contract. Because the API terms
+      page was never written, an enrolled developer's obligations are defined by the
+      general website terms - which forbid systematically downloading content into a
+      database, forbid caching for third parties, and permit only private
+      non-commercial use. Read literally, the published terms are in tension with the
+      portal's own stated purpose, which invites developers to "combine this API with
+      other APIs ... to create valuable products". The real commercial terms are
+      presumably settled in the unpublished enrolment conversation with
+      support@heathrow.com, which means they cannot be evaluated before you commit.
+  distributionModel:
+    value: not-applicable
+    ndcPosture: Not applicable. Heathrow is an airport operator, not a carrier or an
+      agency. It holds no bookable inventory, files no fares, issues no tickets or
+      PNRs, has no IATA NDC certification level to claim, publishes no NDC endpoint,
+      and levies no GDS surcharge. Airlines distribute through their own channels and
+      pay Heathrow aeronautical charges for use of the infrastructure; slot allocation
+      at LHR sits with Airport Coordination Limited under the UK slot regulations, not
+      with a distribution system. Heathrow's own economic terms are set through UK
+      Civil Aviation Authority economic regulation, not through commercial distribution
+      agreements.
+    revenue: aeronautical charges, retail concessions, car parking and ground
+      transport, and property.
+  accessGate:
+    value: application-approval
+    developerMustSign: |
+      Three gates in sequence, all of them human or organisational, none self-serve.
+      (1) Contact and justify. Per developer.heathrow.com/how-it-works, a prospective
+      developer must email support@heathrow.com or call 08443351801 and state "what
+      type of user you are and why you want to use the APIs" before access is granted.
+      (2) Enrolment and identity. Heathrow then runs an "enrolling process", after which
+      the account is authenticated through Microsoft Entra ID / Azure Active Directory -
+      "Sign in using your Azure Active Directory credentials." The product tier is
+      chosen during enrolment, not in the portal.
+      (3) Client certificate. The runtime gateway at api.heathrow.com enforces mutual
+      TLS and rejects any call without one - "400 No required SSL certificate was sent".
+      The portal's sitemap carries a /documentation/requesting-a-client-certificate
+      page for this, but the page 404s.
+      No API terms of service, data licence, pricing sheet or SLA is published for a
+      developer to read before entering that process.
+    portalConfirmed: false
+    portalUrl: https://developer.heathrow.com/
+    portalNote: The portal is live and returns HTTP 200, and it is genuinely Heathrow's
+      own developer portal rather than a partner login shell - it publishes three public
+      product pages. It is recorded as not confirmed only against the stricter test of a
+      self-serve portal - there is no anonymous key issue, no interactive try-it, no
+      visible API catalogue and no self-registration.
+  agentReadiness:
+    llmsTxt: none - /llms.txt returns 404 on both www.heathrow.com and
+      developer.heathrow.com
+    mcp: none published
+    note: No OpenAPI means no agent can be generated against these APIs without first
+      being enrolled, and no machine-readable terms exist for an agent to check before
+      calling.
+sources:
+  - url: https://developer.heathrow.com/
+    type: DeveloperPortal
+    note: Live Azure API Management developer portal, Heathrow-branded, HTTP 200 on
+      2026-07-28.
+  - url: https://developer.heathrow.com/how-it-works
+    type: Onboarding
+    note: The access gate, in Heathrow's own words. Quoted verbatim above.
+  - url: https://developer.heathrow.com/api-flights
+    type: Documentation
+    note: Public prose description of the Flights API.
+  - url: https://developer.heathrow.com/api-connections
+    type: Documentation
+    note: Public prose description of the Connections API and its four query shapes.
+  - url: https://developer.heathrow.com/api-weather
+    type: Documentation
+    note: Public prose description of the Weather API.
+  - url: https://developer.heathrow.com/config.json
+    type: Configuration
+    note: Portal configuration disclosing the Azure API Management management endpoint
+      and API version.
+  - url: https://www.heathrow.com/terms-and-conditions
+    type: TermsOfService
+    note: Intellectual property, systematic-downloading, caching and termination
+      clauses quoted verbatim.
+  - url: https://www.heathrow.com/privacy-notice
+    type: PrivacyPolicy
+    note: UK GDPR rights including data portability; DPO contact privacy@heathrow.com.
+  - url: https://www.heathrow.com/robots.txt
+    type: Robots
+    note: 'Disallow: /*?flightIds=* - evidence of an opaque internal flight identifier.'
+  - url: https://www.heathrow.com/arrivals
+    type: Reference
+    note: Page source disclosed the undocumented api-dp-prod.dp.heathrow.com backend
+      route inventory.
+  - url: https://www.pif.gov.sa/en/news-and-insights/press-releases/2024/pif-completes-its-acquisition-of-15-stake-in-heathrow-airport/
+    type: Reference
+    note: PIF completion of its circa 15% stake in FGP Topco, December 2024 - ownership
+      context.
+  - url: https://www.ardian.com/news-insights/press-releases/ardian-becomes-heathrows-largest-shareholder-acquisition-completes
+    type: Reference
+    note: Ardian becoming Heathrow's largest shareholder, December 2024 - ownership
+      context.
+actions:
+  apisListed: 3
+  apisYmlCreated: true
+  openapiHarvested: false
+  openapiDirectory: omitted - no OpenAPI, AsyncAPI, GraphQL, Postman or JSON Schema
+    artifact is retrievable anonymously from any Heathrow host
+  artifactsSaved: []
+  reason: |
+    Three APIs are listed because Heathrow publicly documents three named API products
+    on its own developer portal - Flights, Connections and Weather - each with a stable
+    public page describing what the API returns. That clears the bar of real AND
+    documented. No baseURL is asserted for any of them, because Heathrow never publishes
+    one; api.heathrow.com is the observed gateway host but no Heathrow document names it
+    as the base URL for these products, and it rejects every request without a client
+    certificate.
+
+    The undocumented api-dp-prod.dp.heathrow.com backend is deliberately excluded from
+    apis.yml. Its route names mirror the portal products, it is clearly the same
+    platform, and it is real - but it is unversioned, uncontracted, key-gated and
+    unpublished, and the website terms forbid the systematic extraction it would enable.
+    Listing it would misrepresent a private website backend as a product.
