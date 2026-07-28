@@ -59,6 +59,7 @@ apis:
     developer portal; the endpoint reference and machine-readable contract are visible
     only to enrolled, Azure AD authenticated accounts.
   humanURL: https://developer.heathrow.com/api-flights
+  baseURL: https://api.heathrow.com/
   tags:
   - Flights
   - Flight Status
@@ -84,6 +85,7 @@ apis:
     machine-readable contract are visible only to enrolled, Azure AD authenticated
     accounts.
   humanURL: https://developer.heathrow.com/api-connections
+  baseURL: https://api.heathrow.com/
   tags:
   - Connections
   - Transfers
@@ -107,6 +109,7 @@ apis:
     on the Heathrow developer portal; the endpoint reference and machine-readable
     contract are visible only to enrolled, Azure AD authenticated accounts.
   humanURL: https://developer.heathrow.com/api-weather
+  baseURL: https://api.heathrow.com/
   tags:
   - Weather
   - Forecast
@@ -121,6 +124,8 @@ apis:
   - type: Authentication
     url: https://developer.heathrow.com/signin
 common:
+- type: DomainSecurity
+  url: security/heathrow-airport-domain-security.yml
 - type: Website
   url: https://www.heathrow.com/
 - type: DeveloperPortal
@@ -149,6 +154,36 @@ common:
   url: https://www.heathrow.com/privacy-notice
 - type: LinkedIn
   url: https://www.linkedin.com/company/heathrow-airport/
+- type: GettingStarted
+  name: How It Works - Heathrow API enrolment
+  url: https://developer.heathrow.com/how-it-works
+- type: Blog
+  name: Heathrow Media Centre
+  url: https://mediacentre.heathrow.com/
+- type: Authentication
+  name: Authentication profile
+  url: authentication/heathrow-airport-authentication.yml
+- type: Conventions
+  name: API conventions
+  url: conventions/heathrow-airport-conventions.yml
+- type: Conformance
+  name: Standards conformance
+  url: conformance/heathrow-airport-conformance.yml
+- type: Lifecycle
+  name: API lifecycle
+  url: lifecycle/heathrow-airport-lifecycle.yml
+- type: ChangeLog
+  name: Changelog capture
+  url: changelog/heathrow-airport-changelog.yml
+- type: Packages
+  name: Client library search
+  url: packages/heathrow-airport-packages.yml
+- type: WellKnown
+  name: Well-known discovery probes
+  url: well-known/heathrow-airport-well-known.yml
+- type: LLMsTxt
+  name: llms.txt
+  url: llms/heathrow-airport-llms.txt
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com

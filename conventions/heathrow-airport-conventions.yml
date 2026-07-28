@@ -1,0 +1,144 @@
+generated: '2026-07-28'
+method: searched
+source: >-
+  https://developer.heathrow.com/how-it-works, /api-flights, /api-connections,
+  /api-weather, /signin, /config.json; live probes of https://api.heathrow.com/,
+  https://apimgmt.lhr.aero/ and https://api-dp-prod.dp.heathrow.com/ on
+  2026-07-28.
+description: >-
+  Cross-cutting request/response semantics for the Heathrow API programme. Most
+  fields below are null, and that is the finding: Heathrow documents the
+  business value of three API products in prose but publishes no technical
+  contract at all - no base path, no parameters, no response shape, no error
+  envelope, no pagination, no idempotency, no versioning and no rate limits.
+  Everything a developer needs to write code is visible only after a manual
+  enrolment and a Microsoft Entra ID account. The only cross-cutting semantics
+  observable from outside are the two access gates.
+
+base_url: https://api.heathrow.com
+base_url_confidence: >-
+  The host is confirmed as Heathrow's Azure Application Gateway - it answers on
+  TLS and returns "400 No required SSL certificate was sent" for every path -
+  but no base path, route prefix or product path is published, so the URL is the
+  gateway root only.
+api_style: >-
+  Not published. The three products (Flights, Flight Connections, Weather) are
+  described as request/response APIs returning flight, connection and weather
+  data, which implies REST over HTTPS with JSON, but no media type, path or
+  method is documented anonymously.
+
+authentication:
+  scheme: Mutual TLS at the gateway (client certificate) + Microsoft Entra ID for the developer portal
+  self_service: false
+  detail: authentication/heathrow-airport-authentication.yml
+  docs: https://developer.heathrow.com/how-it-works
+  evidence: >-
+    "400 No required SSL certificate was sent" from
+    Microsoft-Azure-Application-Gateway/v2 at api.heathrow.com; "Sign in using
+    your Azure Active Directory credentials" at developer.heathrow.com/signin.
+
+idempotency:
+  supported: unknown
+  mechanism: null
+  docs: null
+  note: >-
+    No idempotency key, header, scope or retention window is documented, and
+    there is no OpenAPI to inspect for an Idempotency-Key parameter. No
+    Idempotency pointer is emitted in apis.yml - doing so without evidence would
+    be fabrication. The three published products are read-oriented (flight,
+    connection and weather lookups), where idempotency matters least.
+
+pagination:
+  style: null
+  request_params: null
+  response_fields: null
+  docs: null
+  note: Not documented. The Connections API page names four query shapes (flight-to-flight, flight-to-terminal, terminal-to-terminal, terminal-to-flight) but no paging convention.
+
+field_expansion:
+  supported: unknown
+  note: Not documented.
+
+metadata:
+  supported: unknown
+  note: Not documented.
+
+request_tracing:
+  request_id_header: null
+  note: >-
+    Not documented. Azure API Management normally emits a request correlation id,
+    but Heathrow documents no header and none is observable through the mTLS
+    gateway.
+
+versioning:
+  scheme: null
+  mechanism: null
+  detail: lifecycle/heathrow-airport-lifecycle.yml
+  changelog: changelog/heathrow-airport-changelog.yml
+  note: No versioning scheme published; the APIM /apiVersionSets endpoint is empty anonymously.
+
+error_envelope:
+  media_type: null
+  rfc9457: false
+  shape: null
+  note: >-
+    No application-level error contract is published. The only error bodies
+    observable anonymously are infrastructure responses - an HTML
+    "400 No required SSL certificate was sent" from the api.heathrow.com
+    gateway, and {"message":"Forbidden"} (HTTP 403, application/json) from the
+    undocumented website backend api-dp-prod.dp.heathrow.com.
+
+rate_limits:
+  published: false
+  signal_status: null
+  headers: null
+  docs: https://developer.heathrow.com/how-it-works
+  statement: >-
+    The only quantitative-sounding statement Heathrow makes is on the How It
+    Works page - "you'll have unlimited access to the product you choose during
+    the enrolment procedure". No numeric quota, burst limit, 429 behaviour or
+    rate-limit header is documented, so no rate-limits/ artifact is emitted.
+
+webhooks:
+  supported: false
+  note: No event, webhook or streaming surface is documented anywhere. asyncapi/ is intentionally absent.
+
+products:
+  - name: Flights
+    page: https://developer.heathrow.com/api-flights
+    documented_data: [destinations, arrivals, airlines, aircraft types, flight status, gates and terminals]
+    verbatim: >-
+      "We offer information about the scheduled flights but we enrich those
+      information with real time updates and data about gate and terminals."
+  - name: Flight Connections
+    page: https://developer.heathrow.com/api-connections
+    documented_query_shapes: [flight to flight, flight to terminal, terminal to terminal, terminal to flight]
+  - name: Weather
+    page: https://developer.heathrow.com/api-weather
+    documented_data: [temperature, weather categories, countries list, weather by iatacode]
+    verbatim: >-
+      "Our API is updated multiple times at day and it gives you a reliable
+      service to get weather information worldwide."
+
+other_conventions:
+  - name: Access gate
+    detail: >-
+      Two gates, both manual. Enrolment by email/phone to support@heathrow.com /
+      08443351801, then a Microsoft Entra ID account; separately a
+      Heathrow-issued client certificate for the runtime gateway. See
+      authentication/heathrow-airport-authentication.yml.
+  - name: Product entitlement
+    detail: Entitlement is chosen during enrolment, not self-served from the portal - /products renders empty anonymously.
+  - name: Identifiers
+    detail: >-
+      IATA/ICAO codes are the portable identifiers (LHR / EGLL, airline
+      designators, "Weather by iatacode"). Heathrow's terminal model (T2-T5) and
+      the opaque internal flightIds parameter used on heathrow.com are not
+      portable across airports.
+  - name: No API terms of service
+    detail: >-
+      developer.heathrow.com/terms-and-conditions is verbatim boilerplate
+      governing careers.heathrow.com, and developer.heathrow.com/privacy is
+      unedited Lorem ipsum. The only enforceable terms are the general website
+      terms at heathrow.com/terms-and-conditions, which prohibit systematic
+      downloading into a database.

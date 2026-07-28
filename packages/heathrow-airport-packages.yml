@@ -1,0 +1,46 @@
+generated: '2026-07-28'
+method: searched
+source: >-
+  npm registry search (registry.npmjs.org/-/v1/search?text=heathrow), PyPI
+  (pypi.org/pypi/{heathrow,heathrow-api,pyheathrow}/json), the GitHub org/user
+  API for heathrow / heathrowairport / HeathrowAirport / lhr-airports, GitHub
+  repository search for "heathrow api", and every public page of the Heathrow
+  developer portal (developer.heathrow.com/api-flights, /api-connections,
+  /api-weather, /how-it-works, /apis, /products).
+description: >-
+  Heathrow Airport publishes no first-party client libraries in any package
+  registry, and operates no GitHub organisation. The developer portal offers no
+  SDK, no code samples and no download of any kind to an anonymous visitor - the
+  only route it describes is emailing support@heathrow.com to be enrolled, after
+  which access is via a Microsoft Entra ID (Azure AD) account and a
+  Heathrow-issued client certificate. Whether Heathrow ships SDKs to enrolled
+  developers behind the gate is not observable from outside.
+packages: []
+findings:
+  - registry: npm
+    query: heathrow
+    result: >-
+      No first-party package. The name "heathrow" is taken by an unrelated web
+      content framework; the remaining matches are airport-data utilities and
+      spam.
+    status: 200
+  - registry: pypi
+    query: heathrow / heathrow-api / pyheathrow
+    result: All 404 - no project under any of these names.
+    status: 404
+  - registry: github
+    query: orgs/heathrow, orgs/heathrowairport, orgs/HeathrowAirport, orgs/lhr-airports
+    result: >-
+      All 404. Heathrow Airport Limited has no GitHub organisation. The
+      github.com/Heathrow account is an unrelated personal user.
+    status: 404
+  - registry: github-search
+    query: heathrow api in:name,description
+    result: >-
+      No Heathrow-owned repository. Matches are third-party hobby projects and
+      this catalog's own profile repo.
+    status: 200
+  - registry: maven-central / nuget / pkg.go.dev / rubygems / packagist / crates.io
+    query: heathrow
+    result: Not probed individually - no evidence anywhere on the developer portal that Heathrow ships a client library in any language.
+official_sdk_count: 0

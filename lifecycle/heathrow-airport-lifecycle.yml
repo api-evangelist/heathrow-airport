@@ -1,0 +1,60 @@
+generated: '2026-07-28'
+method: searched
+source: >-
+  https://developer.heathrow.com/api-changelog, https://developer.heathrow.com/apis,
+  https://developer.heathrow.com/products, https://developer.heathrow.com/api-flights,
+  https://developer.heathrow.com/sitemap.xml, and DNS/HTTP probes for a status
+  page on 2026-07-28.
+description: >-
+  Heathrow publishes no lifecycle contract for its API programme. There is no
+  versioning scheme, no deprecation or sunset policy, no SLA and no status page.
+  A changelog page exists and is linked from the portal navigation, but it
+  renders with the heading "API changelog" and zero entries. The only
+  availability statement anywhere is unquantified marketing prose on the Flights
+  API page: "We monitor our APIs constantly to offer the best performance and up
+  time possibile to all developers."
+versioning:
+  scheme: null
+  current: null
+  mechanism: null
+  docs: null
+  notes: >-
+    No version identifier appears in any public portal page, and the Azure APIM
+    /apiVersionSets management endpoint returns {"value":[],"count":0}
+    anonymously. Whether the gated APIs are versioned at all is not observable.
+deprecation:
+  policy_url: null
+  sunset_header: false
+  notes: >-
+    No deprecation policy, no RFC 8594 Sunset/Deprecation header support
+    documented, and no notice period committed to. The portal sitemap lists
+    /documentation/requesting-a-client-certificate, which itself now returns 404
+    - a documented process whose document has already rotted, which is the only
+    lifecycle signal available.
+sla:
+  url: null
+  uptime_target: null
+  notes: >-
+    No SLA and no numeric uptime target is published. The Flights API page
+    carries only the sentence "We monitor our APIs constantly to offer the best
+    performance and up time possibile to all developers." The developer portal's
+    own Terms and Conditions page is boilerplate governing careers.heathrow.com,
+    so there are no API service commitments of any kind in force publicly.
+status_page: null
+status_page_probes:
+  - url: https://status.heathrow.com/
+    status: 0
+    note: Does not resolve.
+  - url: https://developer.heathrow.com/status
+    status: 404
+changelog:
+  url: https://developer.heathrow.com/api-changelog
+  status: 200
+  entries_published: 0
+  note: Page renders the heading "API changelog" and nothing else.
+  detail: changelog/heathrow-airport-changelog.yml
+deprecated_operations: []
+notes: >-
+  No StatusPage or Deprecation pointer is emitted in apis.yml because neither
+  artefact exists - emitting one would be fabrication. The Lifecycle pointer
+  records the absence.

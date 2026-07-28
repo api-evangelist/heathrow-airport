@@ -1,0 +1,25 @@
+generated: '2026-07-28'
+method: searched
+source: https://developer.heathrow.com/api-changelog
+description: >-
+  Heathrow's developer portal ships a dedicated changelog page and links it from
+  the portal sitemap, but it publishes no entries. Fetched anonymously on
+  2026-07-28 the page returns HTTP 200 and renders the heading "API changelog"
+  followed by the site footer - no dates, no versions, no additions, no breaking
+  changes. This is recorded as an empty-but-present changelog rather than a
+  missing one, because the surface exists and could be populated.
+url: https://developer.heathrow.com/api-changelog
+status: 200
+scheme: null
+current_version: null
+entries: []
+entry_count: 0
+observations:
+  - date: '2026-07-28'
+    note: Page renders with the heading "API changelog" and zero entries to an anonymous visitor.
+  - date: '2026-07-28'
+    note: >-
+      The Azure API Management management endpoint behind the portal returns
+      {"value":[],"count":0} for /apis, /products, /tags and /apiVersionSets
+      anonymously, and HTTP 401 for /contentTypes/* - so no versioned change
+      history is exposed through the management plane either.

@@ -1,0 +1,132 @@
+generated: '2026-07-28'
+method: derived
+source: >-
+  Derived from the public Heathrow developer-portal pages
+  (developer.heathrow.com/api-flights, /api-connections, /api-weather,
+  /how-it-works, /apis, /products, /api-changelog), the portal config document
+  (developer.heathrow.com/config.json), and live probes of api.heathrow.com,
+  apimgmt.lhr.aero and api-dp-prod.dp.heathrow.com on 2026-07-28. No OpenAPI,
+  AsyncAPI, GraphQL or JSON Schema is retrievable anonymously, so every
+  spec-derived assertion below rests on observed protocol behaviour and the
+  provider's own prose rather than a machine-readable contract.
+description: >-
+  Which cross-cutting and industry standards the Heathrow API programme
+  demonstrably conforms to. The honest answer is very few: the transport and
+  identity layers use standard Microsoft/IETF building blocks (TLS 1.3, mutual
+  TLS, Microsoft Entra ID), and IATA/ICAO codes appear as data values, but there
+  is no published interface contract of any kind and no aviation data standard
+  (ACRIS, A-CDM, OpenTravel) is referenced anywhere.
+standards:
+  - id: openapi
+    conforms: false
+    evidence: >-
+      No OpenAPI or Swagger document is retrievable anonymously. /openapi.json,
+      /swagger.json and /api-docs return the portal 404 shell on
+      developer.heathrow.com; api.heathrow.com rejects all requests at the mTLS
+      gateway; api-dp-prod.dp.heathrow.com returns 403 {"message":"Forbidden"}
+      for /openapi.json, /swagger/v1/swagger.json and /pihub/swagger.json. The
+      Azure APIM management endpoint returns {"value":[],"count":0} for /apis
+      anonymously.
+  - id: asyncapi
+    conforms: false
+    evidence: No event, streaming or webhook surface is documented or published.
+  - id: graphql
+    conforms: false
+    evidence: No /graphql surface found on any Heathrow host.
+  - id: json-schema
+    conforms: false
+    evidence: No schema documents published.
+  - id: mutual-tls
+    conforms: true
+    evidence: >-
+      https://api.heathrow.com and https://apimgmt.lhr.aero both return
+      "400 No required SSL certificate was sent" from
+      Microsoft-Azure-Application-Gateway/v2 - client-certificate authentication
+      (RFC 8446 mTLS) is enforced at the edge for every request.
+  - id: tls-1.3
+    conforms: true
+    evidence: >-
+      www.heathrow.com and developer.heathrow.com both negotiate TLSv1.3 with
+      HSTS enabled (see security/heathrow-airport-domain-security.yml).
+  - id: oidc
+    conforms: partial
+    evidence: >-
+      The developer portal authenticates against Microsoft Entra ID (Azure
+      Active Directory), an OpenID Connect provider - "Sign in using your Azure
+      Active Directory credentials" (developer.heathrow.com/signin). No
+      /.well-known/openid-configuration is published on any Heathrow host, so
+      the OIDC metadata is not externally discoverable and conformance cannot be
+      verified.
+  - id: oauth2
+    conforms: unknown
+    evidence: >-
+      A /signup-oauth page exists in the portal sitemap (HTTP 200) but publishes
+      no authorization or token endpoint. /.well-known/oauth-authorization-server
+      and /.well-known/oauth-protected-resource are absent on every host.
+  - id: rfc9116-security-txt
+    conforms: false
+    evidence: >-
+      No /.well-known/security.txt on www.heathrow.com, developer.heathrow.com
+      or api.heathrow.com. See well-known/heathrow-airport-well-known.yml.
+  - id: rfc9457-problem-details
+    conforms: unknown
+    evidence: >-
+      No error contract is published. The only anonymously observable error
+      bodies are the gateway's HTML 400 and the website backend's
+      {"message":"Forbidden"} - neither is application/problem+json, but neither
+      is an application-level error either.
+  - id: rfc8594-sunset-header
+    conforms: false
+    evidence: No deprecation or sunset policy is published; the /api-changelog page renders with no entries.
+  - id: idempotency
+    conforms: unknown
+    evidence: No idempotency key, header or retention policy is documented.
+  - id: pagination
+    conforms: unknown
+    evidence: No pagination convention is documented.
+  - id: odata
+    conforms: partial
+    evidence: >-
+      The undocumented website backend exposes
+      https://api-dp-prod.dp.heathrow.com/enterprisesearch/prod/odata/flights and
+      /odata/web (referenced from the heathrow.com page source), so OData is in
+      use internally - but the host returns 403 to unauthenticated callers, no
+      $metadata document is reachable, and the surface is not part of the
+      published API programme.
+  - id: iata-icao-codes
+    conforms: true
+    evidence: >-
+      IATA and ICAO coding is used as data. The airport is LHR / EGLL; the
+      Weather API page documents "Weather by iatacode"; the Flights API page
+      documents airlines and aircraft types. Used as data values, not as a
+      published interface contract.
+  - id: acris-semantic-model
+    conforms: false
+    evidence: >-
+      ACI's ACRIS airport data standard is not referenced anywhere on
+      heathrow.com or developer.heathrow.com.
+  - id: a-cdm
+    conforms: false
+    evidence: No public Airport Collaborative Decision Making data-sharing interface is published.
+  - id: opentravel-ota
+    conforms: false
+    evidence: No OpenTravel/OTA reference found. Heathrow distributes no bookable inventory.
+  - id: iata-ndc
+    conforms: false
+    evidence: Not applicable - Heathrow is airport infrastructure, sells no seats and issues no PNRs.
+  - id: fhir-r4
+    conforms: false
+  - id: scim
+    conforms: false
+  - id: json-api
+    conforms: false
+  - id: fapi
+    conforms: false
+compliance_program:
+  published: false
+  certifications: []
+  note: >-
+    No trust centre, no SOC 2 / ISO 27001 / PCI DSS attestation page and no
+    security-compliance statement was found on any Heathrow host
+    (probe-security-programs.py returned trust=none on 2026-07-28). No
+    Compliance pointer is emitted.

@@ -1,0 +1,90 @@
+generated: '2026-07-28'
+method: searched
+source: >-
+  Live probes of the /.well-known/ discovery surface on every Heathrow host in
+  apis.yml (www.heathrow.com, developer.heathrow.com) plus the API gateway host
+  api.heathrow.com. Status is the HTTP code observed at fetch time on
+  2026-07-28. Nothing was saved verbatim because no host returned a real,
+  correctly-typed well-known document.
+description: >-
+  Heathrow publishes no /.well-known/ discovery surface. The public website
+  answers every /.well-known/ path with a bot-protection 403 (HTML) to a plain
+  client and a 404 (HTML) to a browser user agent; the Azure API Management
+  developer portal answers every path with its 404 SPA shell; and the API
+  gateway at api.heathrow.com rejects every request before routing with
+  "400 No required SSL certificate was sent" because it enforces mutual TLS.
+  There is therefore no security.txt (RFC 9116), no OpenID Connect discovery
+  document, no RFC 8414 OAuth authorization-server metadata, no RFC 9727
+  api-catalog and no ai-plugin manifest anywhere in the Heathrow estate.
+hosts:
+  - host: https://www.heathrow.com
+    note: >-
+      Returns 403 text/html (edge bot protection) to a default client and 404
+      text/html to a browser user agent. Neither is a well-known document.
+    documents:
+      - path: /.well-known/security.txt
+        status: 404
+        type: text/html
+      - path: /.well-known/openid-configuration
+        status: 404
+        type: text/html
+      - path: /.well-known/oauth-authorization-server
+        status: 404
+        type: text/html
+      - path: /.well-known/oauth-protected-resource
+        status: 404
+        type: text/html
+      - path: /.well-known/api-catalog
+        status: 404
+        type: text/html
+      - path: /.well-known/ai-plugin.json
+        status: 404
+        type: text/html
+  - host: https://developer.heathrow.com
+    note: >-
+      Azure API Management developer portal. Every unmatched path returns the
+      portal's 404 SPA shell (text/html, 7,672 bytes), not a document.
+    documents:
+      - path: /.well-known/security.txt
+        status: 404
+        type: text/html
+      - path: /.well-known/openid-configuration
+        status: 404
+        type: text/html
+      - path: /.well-known/oauth-authorization-server
+        status: 404
+        type: text/html
+      - path: /.well-known/oauth-protected-resource
+        status: 404
+        type: text/html
+      - path: /.well-known/api-catalog
+        status: 404
+        type: text/html
+      - path: /.well-known/ai-plugin.json
+        status: 404
+        type: text/html
+  - host: https://api.heathrow.com
+    note: >-
+      Microsoft-Azure-Application-Gateway/v2. Mutual TLS is enforced at the
+      edge, so every path - including /.well-known/* - is rejected with
+      "400 No required SSL certificate was sent" before any routing happens.
+    documents:
+      - path: /.well-known/security.txt
+        status: 400
+        type: text/html
+      - path: /.well-known/openid-configuration
+        status: 400
+        type: text/html
+      - path: /.well-known/oauth-authorization-server
+        status: 400
+        type: text/html
+      - path: /.well-known/oauth-protected-resource
+        status: 400
+        type: text/html
+      - path: /.well-known/api-catalog
+        status: 400
+        type: text/html
+      - path: /.well-known/ai-plugin.json
+        status: 400
+        type: text/html
+saved_files: []
