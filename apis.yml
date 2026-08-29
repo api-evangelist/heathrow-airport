@@ -23,6 +23,17 @@ description: Heathrow Airport Limited operates London Heathrow (IATA LHR, ICAO E
   required SSL certificate was sent", meaning mutual TLS with a Heathrow-issued client
   certificate. So - public docs, gated contracts, no exit path beyond a UK GDPR data
   portability request to privacy@heathrow.com.
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 accessModel:
   pricing: unknown
   onboarding: application-approval
